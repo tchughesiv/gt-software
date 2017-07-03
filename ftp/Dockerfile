@@ -22,21 +22,22 @@ ENV FTP_DIR=/var/ivory \
 COPY help.md /tmp/
 COPY licenses /licenses
 
-RUN REPOLIST=rhel-7-server-rpms,rhel-7-server-optional-rpms,epel \
+RUN REPOLIST=rhel-7-server-rpms,rhel-7-server-optional-rpms,epel && \
     yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
     yum -y install --disablerepo "*" --enablerepo ${REPOLIST} --setopt=tsflags=nodocs \
       golang-github-cpuguy83-go-md2man ftp rpm-build redhat-rpm-config make gcc && \
-    yum-builddep -y pure-ftpd && \
+    yum-builddep -y --disablerepo "*" --enablerepo ${REPOLIST} --setopt=tsflags=nodocs pure-ftpd && \
     mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS} && \
     echo '%_topdir %(echo $HOME)/rpmbuild' > ~/.rpmmacros && \
     cd /tmp && \
-    yumdownloader --source pure-ftpd && \
+    yumdownloader --disablerepo "*" --enablerepo ${REPOLIST} --source pure-ftpd && \
     rpm -i pure-ftpd-*.src.rpm && \
     cd ~/rpmbuild/SPECS && \
     sed -i '/^%configure/a\            --with-nonroot \\'  pure-ftpd.spec && \
     sed -i 's/--with-capabilities/--without-capabilities/g' pure-ftpd.spec && \
     rpmbuild -ba pure-ftpd.spec && \
-    yum -y install ~/rpmbuild/RPMS/x86_64/pure-ftpd-*.x86_64.rpm && \
+    yum -y install --disablerepo "*" --enablerepo ${REPOLIST} --setopt=tsflags=nodocs \
+      ~/rpmbuild/RPMS/x86_64/pure-ftpd-*.x86_64.rpm && \
     go-md2man -in /tmp/help.md -out /help.1 && \
     yum -y autoremove rpm-build redhat-rpm-config make gcc golang-github-cpuguy83-go-md2man && \
     rm -rf ~/rpmbuild /tmp/pure-ftpd-*.src.rpm && \
