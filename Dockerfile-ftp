@@ -1,0 +1,17 @@
+FROM stilliard/pure-ftpd
+
+ENV FTP_USER ivory
+ENV FTP_PASS ivory
+ENV FTP_DIR  /var/ivory
+
+RUN useradd -r $FTP_USER && \
+    echo $FTP_USER:$FTP_PASS | chpasswd -c SHA512 && \
+    mkdir $FTP_DIR && \
+    chown $FTP_USER $FTP_DIR
+
+VOLUME $FTP_DIR
+
+
+CMD /usr/sbin/pure-ftpd -c 50 -C 10 -l unix -E -j -R -P $PUBLICHOST -p 30000:30009
+
+EXPOSE 21 30000-30009
